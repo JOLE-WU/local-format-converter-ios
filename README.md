@@ -44,10 +44,19 @@
 
 ## 使用
 
-1. 打开 App →「选择要转换的文件」（从「文件」App 选取，或直接从「文件」分享到本 App）。
-2. 选目标格式（如 `MP3`）→「开始转换」。
-3. 完成后点「分享 / 保存转换结果」；
-   或到「文件 → 我的 iPhone → 格式转换器 → Converted」取出（已开启文件共享）。
+1. 打开 App，选择来源（**可多次叠加选择，互不覆盖**）：
+   - **「选择文件（可多选）」**：一次勾选多个文件；
+   - **「选择整个文件夹（含所有子文件夹）」**：选中一个文件夹后，App 会**递归收集里面所有可识别的文件**（含各级子文件夹），界面上会显示总数与类型统计、以及文件清单预览。
+2. 选择目标格式：
+   - **「⭐ 自动匹配」（默认，推荐用于混合文件夹）**：视频→MP4、音频→MP3、图片→JPG，一次把文件夹里的内容全部转掉；
+   - 或手动指定**单一格式**（如 `MP3`）：此时不适用于该文件类型的条目会**自动跳过**并计入统计，不会让整批中断。
+3. 「③ 开始批量转换」：串行逐个处理（避免 FFmpeg 并发与内存峰值），进度条显示整体进度，可随时「停止当前批次」（当前文件转完后生效）。
+4. 结束后显示 `成功 / 跳过 / 失败` 统计与失败明细；点「分享 / 保存全部结果」一次性分享所有产物，或到
+   「文件 → 我的 iPhone → 格式转换器 → **Converted → 批量_日期时间**」取出（已开启文件共享）。
+
+> 每次批量转换单独建一个结果目录，同名文件自动追加序号，**不会互相覆盖**。
+> 文件夹按扩展名识别类型，隐藏文件与无法识别的类型会自动忽略；受 DRM 保护的文件会在该项标记失败，不影响其余条目。
+> 选择文件夹使用系统 `UIDocumentPicker` 的 security-scoped 访问，App 会在整个批次期间持有该权限。
 
 ## 构建（GitHub Actions）
 
@@ -68,8 +77,9 @@
 FormatConverter.xcodeproj/        工程文件 + shared scheme（含 Embed Frameworks 阶段）
 FormatConverter/
   App.swift                     @main AppDelegate / SceneDelegate
-  RootViewController.swift      UI（UIKit 纯代码）
+  RootViewController.swift      UI + 文件夹递归选择 / 串行批量队列 / 进度与取消（UIKit 纯代码）
   ConvertEngine.swift           双引擎转换逻辑（AVFoundation/ImageIO + FFmpeg 调度）
+                                + 文件夹扫描、自动匹配格式、批次输出目录
   FFmpegBridge.h / .m           ObjC 桥接：进程内同步调用 FFmpegKit
   FormatConverter-Bridging-Header.h
   Info.plist / Assets.xcassets

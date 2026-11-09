@@ -182,14 +182,77 @@ final class ConvertEngine {
         return f.string(fromByteCount: bytes)
     }
 
-    private static func destination(_ source: URL, ext: String) -> URL {
+    private static func destination(_ source: URL, ext: String, in dir: URL? = nil) -> URL {
+        let folder = dir ?? outputDir
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let base = source.deletingPathExtension().lastPathComponent
         let df = DateFormatter()
         df.dateFormat = "HHmmss"
-        let name = "\(base)_转\(ext.uppercased())_\(df.string(from: Date())).\(ext)"
-        let url = outputDir.appendingPathComponent(name)
-        try? FileManager.default.removeItem(at: url)
+        let stamp = df.string(from: Date())
+        // 同名不覆盖：不同子文件夹里可能有重名文件，自动追加序号
+        var url = folder.appendingPathComponent("\(base)_转\(ext.uppercased())_\(stamp).\(ext)")
+        var n = 2
+        while FileManager.default.fileExists(atPath: url.path) {
+            url = folder.appendingPathComponent("\(base)_转\(ext.uppercased())_\(stamp)_\(n).\(ext)")
+            n += 1
+        }
         return url
+    }
+
+    // MARK: - 批量转换支持
+
+    /// 每次批量转换单独建一个结果目录，避免与单文件结果混在一起、也避免同名冲突
+    static func makeBatchDirectory() -> URL {
+        let df = DateFormatter()
+        df.dateFormat = "yyyyMMdd_HHmmss"
+        let dir = outputDir.appendingPathComponent("批量_\(df.string(from: Date()))", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
+    /// 只按扩展名识别类型：用于文件夹递归扫描，避免对成百上千个文件做同步 AVAsset 探测而卡住
+    func detectFast(_ url: URL) -> MediaKind {
+        let ext = url.pathExtension.lowercased()
+        if ConvertEngine.imageExts.contains(ext) { return .image }
+        if ConvertEngine.videoExts.contains(ext) { return .video }
+        if ConvertEngine.audioExts.contains(ext) { return .audio }
+        return .unknown
+    }
+
+    /// 递归扫描文件夹（含所有子文件夹），返回全部可识别的文件，按路径排序。
+    /// 调用前必须已对 folder 调用 startAccessingSecurityScopedResource()
+    func scan(folder: URL) -> [(URL, MediaKind)] {
+        let fm = FileManager.default
+        var found: [(URL, MediaKind)] = []
+        guard let enumerator = fm.enumerator(at: folder,
+                                             includingPropertiesForKeys: [.isDirectoryKey],
+                                             options: [.skipsHiddenFiles, .skipsPackageDescendants]) else {
+            return found
+        }
+        for case let url as URL in enumerator {
+            guard let values = try? url.resourceValues(forKeys: [.isDirectoryKey]) else { continue }
+            if (values.isDirectory ?? false) { continue }
+            let kind = detectFast(url)
+            if kind != .unknown { found.append((url, kind)) }
+        }
+        return found.sorted { $0.0.path.localizedStandardCompare($1.0.path) == .orderedAscending }
+    }
+
+    /// 某种源文件类型能否输出成指定格式
+    func supports(kind: MediaKind, format: FormatSpec) -> Bool {
+        availableFormats(for: kind).contains { $0.id == format.id }
+    }
+
+    /// 自动匹配目标：视频 → MP4、音频 → MP3、图片 → JPG
+    func autoFormat(for kind: MediaKind) -> FormatSpec? {
+        let id: String
+        switch kind {
+        case .video:  id = "mp4"
+        case .audio:  id = "mp3"
+        case .image:  id = "jpg"
+        case .unknown: return nil
+        }
+        return availableFormats(for: kind).first { $0.id == id }
     }
 
     // MARK: - 主入口
@@ -198,9 +261,10 @@ final class ConvertEngine {
                  kind: MediaKind,
                  format: FormatSpec,
                  quality: Int,
+                 outputDirectory: URL? = nil,
                  progress: @escaping (Double) -> Void,
                  completion: @escaping (Result<URL, Error>) -> Void) {
-        let dest = Self.destination(source, ext: format.ext)
+        let dest = Self.destination(source, ext: format.ext, in: outputDirectory)
 
         // 源是 iOS 原生解不了的格式，或目标是 iOS 原生编不了的格式 → 走 FFmpeg
         let needFFmpeg = ConvertEngine.ffmpegInputExts.contains(source.pathExtension.lowercased())

@@ -25,20 +25,27 @@ enum ConvertError: LocalizedError {
     case exportFailed(String)
     case audioFailed(String)
     case imageFailed
+    case ffmpegFailed(String)
 
     var errorDescription: String? {
         switch self {
-        case .unreadable:          return "无法读取该文件，iOS 系统可能不支持此编码"
+        case .unreadable:          return "无法读取该文件，可能是不支持的编码或受 DRM 保护"
         case .unsupported:         return "这种源文件类型暂不支持"
         case .sessionUnavailable:  return "无法创建导出会话，请换一种目标格式"
         case .exportFailed(let m): return "导出失败：\(m)"
         case .audioFailed(let m):  return "音频转换失败：\(m)"
         case .imageFailed:         return "图片转换失败，请换一种目标格式"
+        case .ffmpegFailed(let m): return "FFmpeg 转换失败：\(m)"
         }
     }
 }
 
-// MARK: - 转换引擎（全部本地，基于 AVFoundation / ImageIO，无任何网络请求）
+// MARK: - 转换引擎（全部本地，零联网）
+//
+// 双引擎：
+//   · 系统 AVFoundation / ImageIO：处理 iOS 原生可解码格式，轻量、硬件加速
+//   · 内置 FFmpeg 动态库：处理 iOS 原生不支持的 WMA/ASF/FLAC/OGG/MKV/AVI 等，
+//     并提供 iOS 缺失的 MP3 编码器（libmp3lame）
 
 final class ConvertEngine {
 
@@ -53,9 +60,26 @@ final class ConvertEngine {
         return dir
     }
 
-    private static let imageExts: Set<String> = ["jpg", "jpeg", "png", "heic", "heif", "tiff", "tif", "gif", "bmp", "webp"]
-    private static let audioExts: Set<String> = ["m4a", "mp3", "aac", "wav", "aif", "aiff", "caf", "alac", "au", "snd"]
-    private static let videoExts: Set<String> = ["mp4", "mov", "m4v", "3gp", "3g2", "mts", "m2ts", "ts"]
+    private static let imageExts: Set<String> =
+        ["jpg", "jpeg", "png", "heic", "heif", "tiff", "tif", "gif", "bmp", "webp"]
+
+    private static let audioExts: Set<String> =
+        ["m4a", "mp3", "aac", "wav", "aif", "aiff", "aifc", "caf", "alac", "au", "snd", "m4b",
+         "wma", "asf", "flac", "ogg", "oga", "opus", "mka", "ape", "wv", "tta",
+         "amr", "ac3", "eac3", "dts", "mp2", "ra", "rm"]
+
+    private static let videoExts: Set<String> =
+        ["mp4", "mov", "m4v", "3gp", "3g2", "mts", "m2ts", "ts",
+         "mkv", "avi", "webm", "flv", "wmv", "mpg", "mpeg", "vob", "rmvb", "divx"]
+
+    /// iOS 原生无法解码、必须交给内置 FFmpeg 的扩展名
+    private static let ffmpegInputExts: Set<String> =
+        ["wma", "asf", "flac", "ogg", "oga", "opus", "mka", "ape", "wv", "tta",
+         "amr", "ac3", "eac3", "dts", "mp2", "ra", "rm", "rmvb",
+         "mkv", "avi", "webm", "flv", "wmv", "mpg", "mpeg", "vob", "divx"]
+
+    /// iOS 原生无法编码、必须交给 FFmpeg 的目标格式
+    private static let ffmpegOutputIds: Set<String> = ["mp3", "flac"]
 
     func detect(_ url: URL) -> MediaKind {
         let ext = url.pathExtension.lowercased()
@@ -73,20 +97,24 @@ final class ConvertEngine {
         switch kind {
         case .video:
             return [
-                FormatSpec(id: "mp4",  title: "MP4 视频",   ext: "mp4",  group: 0, uti: nil),
-                FormatSpec(id: "mov",  title: "MOV 视频",   ext: "mov",  group: 0, uti: nil),
-                FormatSpec(id: "m4v",  title: "M4V 视频",   ext: "m4v",  group: 0, uti: nil),
-                FormatSpec(id: "m4a",  title: "M4A 音频",   ext: "m4a",  group: 1, uti: nil),
-                FormatSpec(id: "wav",  title: "WAV 音频",   ext: "wav",  group: 1, uti: nil),
-                FormatSpec(id: "aiff", title: "AIFF 音频",  ext: "aiff", group: 1, uti: nil),
-                FormatSpec(id: "caf",  title: "CAF 音频",   ext: "caf",  group: 1, uti: nil),
+                FormatSpec(id: "mp4",  title: "MP4 视频",     ext: "mp4",  group: 0, uti: nil),
+                FormatSpec(id: "mov",  title: "MOV 视频",     ext: "mov",  group: 0, uti: nil),
+                FormatSpec(id: "m4v",  title: "M4V 视频",     ext: "m4v",  group: 0, uti: nil),
+                FormatSpec(id: "m4a",  title: "M4A 音频",     ext: "m4a",  group: 1, uti: nil),
+                FormatSpec(id: "mp3",  title: "MP3 音频",     ext: "mp3",  group: 1, uti: nil),
+                FormatSpec(id: "wav",  title: "WAV 音频",     ext: "wav",  group: 1, uti: nil),
+                FormatSpec(id: "flac", title: "FLAC 无损",    ext: "flac", group: 1, uti: nil),
+                FormatSpec(id: "aiff", title: "AIFF 音频",    ext: "aiff", group: 1, uti: nil),
+                FormatSpec(id: "caf",  title: "CAF 音频",     ext: "caf",  group: 1, uti: nil),
             ]
         case .audio:
             return [
-                FormatSpec(id: "m4a",  title: "M4A (AAC)",   ext: "m4a",  group: 1, uti: nil),
-                FormatSpec(id: "wav",  title: "WAV (PCM)",   ext: "wav",  group: 1, uti: nil),
-                FormatSpec(id: "aiff", title: "AIFF (PCM)",  ext: "aiff", group: 1, uti: nil),
-                FormatSpec(id: "caf",  title: "CAF (PCM)",   ext: "caf",  group: 1, uti: nil),
+                FormatSpec(id: "m4a",  title: "M4A (AAC)",    ext: "m4a",  group: 1, uti: nil),
+                FormatSpec(id: "mp3",  title: "MP3",          ext: "mp3",  group: 1, uti: nil),
+                FormatSpec(id: "wav",  title: "WAV (PCM)",    ext: "wav",  group: 1, uti: nil),
+                FormatSpec(id: "flac", title: "FLAC 无损",    ext: "flac", group: 1, uti: nil),
+                FormatSpec(id: "aiff", title: "AIFF (PCM)",   ext: "aiff", group: 1, uti: nil),
+                FormatSpec(id: "caf",  title: "CAF (PCM)",    ext: "caf",  group: 1, uti: nil),
             ]
         case .image:
             return [
@@ -125,6 +153,9 @@ final class ConvertEngine {
             }
             if a.first != nil { lines.append("音轨：有") }
             lines.append("类型：\(kind == .video ? "视频" : "音频")")
+            if Self.ffmpegInputExts.contains(url.pathExtension.lowercased()) {
+                lines.append("解码：内置 FFmpeg（系统无此解码器）")
+            }
         case .image:
             if let src = CGImageSourceCreateWithURL(url as CFURL, nil),
                let props = CGImageSourceCopyPropertiesAtIndex(src, 0, nil) as? [CFString: Any],
@@ -171,6 +202,16 @@ final class ConvertEngine {
                  completion: @escaping (Result<URL, Error>) -> Void) {
         let dest = Self.destination(source, ext: format.ext)
 
+        // 源是 iOS 原生解不了的格式，或目标是 iOS 原生编不了的格式 → 走 FFmpeg
+        let needFFmpeg = ConvertEngine.ffmpegInputExts.contains(source.pathExtension.lowercased())
+                      || ConvertEngine.ffmpegOutputIds.contains(format.id)
+        if needFFmpeg {
+            let options = Self.ffmpegOptions(for: format)
+            convertViaFFmpeg(source: source, dest: dest, options: options,
+                             progress: progress, completion: completion)
+            return
+        }
+
         switch format.group {
         case 2:
             DispatchQueue.global(qos: .userInitiated).async {
@@ -208,6 +249,68 @@ final class ConvertEngine {
             }
         default:
             done(.failure(ConvertError.unsupported), progress: progress, completion: completion)
+        }
+    }
+
+    // MARK: - FFmpeg 路径（进程内同步执行）
+
+    /// 生成 ffmpeg 参数（不含任何路径，路径由桥接层单独传入，避免空格被拆）
+    private static func ffmpegOptions(for format: FormatSpec) -> String {
+        switch format.id {
+        case "mp3":            return "-vn -c:a libmp3lame -q:a 2"
+        case "flac":           return "-vn -c:a flac"
+        case "m4a":            return "-vn -c:a aac -b:a 192k"
+        case "wav", "caf":     return "-vn -c:a pcm_s16le"
+        case "aiff":           return "-vn -c:a pcm_s16be"
+        // 视频：ffmpeg-only 源（MKV/AVI/WebM…）统一重编码为兼容性最好的 MPEG-4 + AAC
+        case "mp4", "m4v", "mov":
+            return "-c:v mpeg4 -q:v 5 -c:a aac -b:a 128k -pix_fmt yuv420p"
+        default:               return "-vn -c:a aac -b:a 192k"
+        }
+    }
+
+    private var ffmpegTimer: Timer?
+
+    private func convertViaFFmpeg(source: URL, dest: URL, options: String,
+                                  progress: @escaping (Double) -> Void,
+                                  completion: @escaping (Result<URL, Error>) -> Void) {
+        try? FileManager.default.removeItem(at: dest)
+
+        // FFmpegKit 同步执行，没有内建进度回调；用一个平滑的估计进度避免界面卡在 0
+        DispatchQueue.main.async {
+            self.ffmpegTimer?.invalidate()
+            var p = 0.05
+            self.ffmpegTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { _ in
+                p = min(0.9, p + 0.02)
+                progress(p)
+            }
+        }
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            _ = source.path.withCString { sp in
+                dest.path.withCString { dp in
+                    options.withCString { op in
+                        fc_ffmpeg_run(sp, dp, op)
+                    }
+                }
+            }
+            let fm = FileManager.default
+            let ok: Bool = {
+                guard let attr = try? fm.attributesOfItem(atPath: dest.path),
+                      let n = attr[.size] as? NSNumber else { return false }
+                return n.int64Value > 1024
+            }()
+            DispatchQueue.main.async {
+                self.ffmpegTimer?.invalidate()
+                self.ffmpegTimer = nil
+                if ok {
+                    self.done(.success(dest), progress: progress, completion: completion)
+                } else {
+                    try? fm.removeItem(at: dest)
+                    self.done(.failure(ConvertError.ffmpegFailed("未生成输出文件，源文件可能损坏、受 DRM 保护或该编码不可用")),
+                              progress: progress, completion: completion)
+                }
+            }
         }
     }
 
@@ -319,7 +422,6 @@ final class ConvertEngine {
         do { src = try AVAudioFile(forReading: audio) }
         catch { throw ConvertError.audioFailed(error.localizedDescription) }
 
-        // 目标落盘格式：16-bit 整数 PCM（WAV / AIFF / CAF 由扩展名自动决定容器）
         guard let dstFormat = AVAudioFormat(commonFormat: .pcmFormatInt16,
                                             sampleRate: src.processingFormat.sampleRate,
                                             channels: src.processingFormat.channelCount,

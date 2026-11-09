@@ -15,7 +15,45 @@
 		B10000000000000000000006 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A10000000000000000000008 /* ImageIO.framework */; };
 		B10000000000000000000007 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A10000000000000000000009 /* CoreMedia.framework */; };
 		B10000000000000000000008 /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000A /* UniformTypeIdentifiers.framework */; };
+		B10000000000000000000009 /* FFmpegBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000C /* FFmpegBridge.m */; };
+		B20000000000000000000001 /* ffmpegkit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000001 /* ffmpegkit.framework */; };
+		B20000000000000000000002 /* libavcodec.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000002 /* libavcodec.framework */; };
+		B20000000000000000000003 /* libavdevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000003 /* libavdevice.framework */; };
+		B20000000000000000000004 /* libavfilter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000004 /* libavfilter.framework */; };
+		B20000000000000000000005 /* libavformat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000005 /* libavformat.framework */; };
+		B20000000000000000000006 /* libavutil.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000006 /* libavutil.framework */; };
+		B20000000000000000000007 /* libswresample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000007 /* libswresample.framework */; };
+		B20000000000000000000008 /* libswscale.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000008 /* libswscale.framework */; };
+		B30000000000000000000001 /* ffmpegkit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000001 /* ffmpegkit.framework */; };
+		B30000000000000000000002 /* libavcodec.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000002 /* libavcodec.framework */; };
+		B30000000000000000000003 /* libavdevice.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000003 /* libavdevice.framework */; };
+		B30000000000000000000004 /* libavfilter.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000004 /* libavfilter.framework */; };
+		B30000000000000000000005 /* libavformat.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000005 /* libavformat.framework */; };
+		B30000000000000000000006 /* libavutil.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000006 /* libavutil.framework */; };
+		B30000000000000000000007 /* libswresample.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000007 /* libswresample.framework */; };
+		B30000000000000000000008 /* libswscale.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000008 /* libswscale.framework */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D10000000000000000000005 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				B30000000000000000000001 /* ffmpegkit.framework in Embed Frameworks */,
+				B30000000000000000000002 /* libavcodec.framework in Embed Frameworks */,
+				B30000000000000000000003 /* libavdevice.framework in Embed Frameworks */,
+				B30000000000000000000004 /* libavfilter.framework in Embed Frameworks */,
+				B30000000000000000000005 /* libavformat.framework in Embed Frameworks */,
+				B30000000000000000000006 /* libavutil.framework in Embed Frameworks */,
+				B30000000000000000000007 /* libswresample.framework in Embed Frameworks */,
+				B30000000000000000000008 /* libswscale.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		A10000000000000000000001 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
@@ -28,6 +66,17 @@
 		A10000000000000000000008 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
 		A10000000000000000000009 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		A1000000000000000000000A /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = SDKROOT; };
+		A1000000000000000000000B /* FFmpegBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FFmpegBridge.h; sourceTree = "<group>"; };
+		A1000000000000000000000C /* FFmpegBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FFmpegBridge.m; sourceTree = "<group>"; };
+		A1000000000000000000000D /* FormatConverter-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FormatConverter-Bridging-Header.h"; sourceTree = "<group>"; };
+		A30000000000000000000001 /* ffmpegkit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ffmpegkit.framework; path = Frameworks/flat/ffmpegkit.framework; sourceTree = "<group>"; };
+		A30000000000000000000002 /* libavcodec.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libavcodec.framework; path = Frameworks/flat/libavcodec.framework; sourceTree = "<group>"; };
+		A30000000000000000000003 /* libavdevice.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libavdevice.framework; path = Frameworks/flat/libavdevice.framework; sourceTree = "<group>"; };
+		A30000000000000000000004 /* libavfilter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libavfilter.framework; path = Frameworks/flat/libavfilter.framework; sourceTree = "<group>"; };
+		A30000000000000000000005 /* libavformat.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libavformat.framework; path = Frameworks/flat/libavformat.framework; sourceTree = "<group>"; };
+		A30000000000000000000006 /* libavutil.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libavutil.framework; path = Frameworks/flat/libavutil.framework; sourceTree = "<group>"; };
+		A30000000000000000000007 /* libswresample.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libswresample.framework; path = Frameworks/flat/libswresample.framework; sourceTree = "<group>"; };
+		A30000000000000000000008 /* libswscale.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libswscale.framework; path = Frameworks/flat/libswscale.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -39,6 +88,14 @@
 				B10000000000000000000006 /* ImageIO.framework in Frameworks */,
 				B10000000000000000000007 /* CoreMedia.framework in Frameworks */,
 				B10000000000000000000008 /* UniformTypeIdentifiers.framework in Frameworks */,
+				B20000000000000000000001 /* ffmpegkit.framework in Frameworks */,
+				B20000000000000000000002 /* libavcodec.framework in Frameworks */,
+				B20000000000000000000003 /* libavdevice.framework in Frameworks */,
+				B20000000000000000000004 /* libavfilter.framework in Frameworks */,
+				B20000000000000000000005 /* libavformat.framework in Frameworks */,
+				B20000000000000000000006 /* libavutil.framework in Frameworks */,
+				B20000000000000000000007 /* libswresample.framework in Frameworks */,
+				B20000000000000000000008 /* libswscale.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -68,6 +125,9 @@
 				A10000000000000000000001 /* App.swift */,
 				A10000000000000000000003 /* RootViewController.swift */,
 				A10000000000000000000004 /* ConvertEngine.swift */,
+				A1000000000000000000000B /* FFmpegBridge.h */,
+				A1000000000000000000000C /* FFmpegBridge.m */,
+				A1000000000000000000000D /* FormatConverter-Bridging-Header.h */,
 				A10000000000000000000002 /* Info.plist */,
 				A10000000000000000000005 /* Assets.xcassets */,
 			);
@@ -81,6 +141,14 @@
 				A10000000000000000000008 /* ImageIO.framework */,
 				A10000000000000000000009 /* CoreMedia.framework */,
 				A1000000000000000000000A /* UniformTypeIdentifiers.framework */,
+				A30000000000000000000001 /* ffmpegkit.framework */,
+				A30000000000000000000002 /* libavcodec.framework */,
+				A30000000000000000000003 /* libavdevice.framework */,
+				A30000000000000000000004 /* libavfilter.framework */,
+				A30000000000000000000005 /* libavformat.framework */,
+				A30000000000000000000006 /* libavutil.framework */,
+				A30000000000000000000007 /* libswresample.framework */,
+				A30000000000000000000008 /* libswscale.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -94,6 +162,7 @@
 			buildPhases = (
 				D10000000000000000000001 /* Sources */,
 				D10000000000000000000003 /* Frameworks */,
+				D10000000000000000000005 /* Embed Frameworks */,
 				D10000000000000000000002 /* Resources */,
 			);
 			buildRules = (
@@ -158,6 +227,7 @@
 				B10000000000000000000001 /* App.swift in Sources */,
 				B10000000000000000000002 /* RootViewController.swift in Sources */,
 				B10000000000000000000003 /* ConvertEngine.swift in Sources */,
+				B10000000000000000000009 /* FFmpegBridge.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -210,13 +280,26 @@
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_IDENTITY = "";
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks/flat",
+				);
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FormatConverter/Info.plist;
-				MARKETING_VERSION = 1.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 2.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.local.formatconverter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "FormatConverter/FormatConverter-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -229,13 +312,26 @@
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_IDENTITY = "";
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks/flat",
+				);
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FormatConverter/Info.plist;
-				MARKETING_VERSION = 1.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 2.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.local.formatconverter;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "FormatConverter/FormatConverter-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

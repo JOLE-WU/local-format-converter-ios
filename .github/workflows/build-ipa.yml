@@ -14,7 +14,7 @@ permissions:
 jobs:
   build:
     runs-on: macos-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,6 +24,9 @@ jobs:
           xcodebuild -version
           xcode-select -p
           swift --version
+
+      - name: Fetch FFmpeg frameworks (WMA decoder + libmp3lame)
+        run: bash scripts/fetch-ffmpeg.sh
 
       - name: Build unsigned .app (arm64, iPhoneOS)
         run: |
@@ -48,7 +51,9 @@ jobs:
           test -n "$APP" && echo "Found: $APP"
           rm -rf Payload && mkdir Payload
           cp -R "$APP" Payload/
-          rm -rf Payload/FormatConverter.app/_CodeSignature Payload/FormatConverter.app/embedded.mobileprovision
+          # 未签名 IPA：清理所有签名残留（含动态库自带的），侧载时由工具统一重签
+          find Payload -name '_CodeSignature' -type d -prune -exec rm -rf {} +
+          find Payload -name 'embedded.mobileprovision' -delete
           rm -f FormatConverter.ipa
           zip -qry FormatConverter.ipa Payload
           echo "=== IPA content ==="

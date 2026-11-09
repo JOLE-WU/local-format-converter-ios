@@ -3,3 +3,11 @@ build/
 .DS_Store
 Payload/
 *.ipa.tmp
+
+# FFmpeg 动态库由 CI 运行时下载（体积大、GPL，不入库）
+Frameworks/flat/
+.ffmpeg-download/
+*.zip
+
+# 出包产物（由 Actions 回推到 dist/，不重复跟踪临时副本）
+/FormatConverter.ipa

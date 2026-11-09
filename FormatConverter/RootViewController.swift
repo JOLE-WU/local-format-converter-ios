@@ -127,12 +127,14 @@ final class RootViewController: UIViewController, UIDocumentPickerDelegate {
         noteLabel.textColor = .tertiaryLabel
         noteLabel.text = """
         全部转换在本机离线完成，不上传任何文件、不联网。
+        已内置 FFmpeg 动态库，突破 iOS 原生编解码限制。
 
-        支持范围（受 iOS 系统解码能力限制）：
-        · 视频：MP4 / MOV / M4V 互转，可重编码压缩、提取音轨
-        · 音频：M4A(AAC) / WAV / AIFF / CAF(PCM) 互转
+        支持范围：
+        · 音频：WMA / FLAC / OGG / Opus / M4A / MP3 / WAV / AIFF / CAF 互转
+          ★ WMA → MP3 可用（受 DRM 保护的 WMA 无法转换）
+        · 视频：MP4 / MOV / M4V 互转、压缩、提取音轨；
+          MKV / AVI / WebM / FLV 等可转码为 MP4 或提取音轨
         · 图片：JPEG / PNG / HEIC / TIFF / GIF / BMP 互转
-        · MKV / AVI / FLAC / WebM 等 iOS 无法原生解码，需先用桌面工具预处理
 
         转换结果保存在「文件 → 我的 iPhone → 格式转换器 → Converted」，也可点上方按钮直接分享。
         """

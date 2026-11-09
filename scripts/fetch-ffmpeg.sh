@@ -34,11 +34,16 @@ FRAMEWORKS=(ffmpegkit libavcodec libavdevice libavfilter libavformat libavutil l
 verify_codecs() {
   local bin="$OUT/libavcodec.framework/libavcodec"
   [ -f "$bin" ] || return 1
-  local mp3=0 wma=0
-  strings "$bin" | grep -qi 'libmp3lame' && mp3=1
-  strings "$bin" | grep -qiE 'wmav2|wmapro' && wma=1
-  echo "     libmp3lame(MP3 编码)=$mp3   WMA 解码=$wma"
-  [ "$mp3" = 1 ] && [ "$wma" = 1 ]
+  # 用 Python 直接读二进制字节判断：macOS 的 strings 配合 `grep -q` 会因管道被提前
+  # 关闭而输出 "failed to flush output"，在 pipefail 下造成假的「缺失」判断。
+  python3 - "$bin" <<'PYCHECK'
+import sys
+data = open(sys.argv[1], "rb").read()
+has_mp3 = b"libmp3lame" in data
+has_wma = any(k in data for k in (b"wmav2", b"wmapro", b"wmalossless", b"wmavoice"))
+print(f"     libmp3lame(MP3 编码)={int(has_mp3)}   WMA 解码={int(has_wma)}   ({len(data)} 字节)")
+sys.exit(0 if (has_mp3 and has_wma) else 1)
+PYCHECK
 }
 
 verify_frameworks() {

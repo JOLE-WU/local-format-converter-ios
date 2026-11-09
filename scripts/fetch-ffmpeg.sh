@@ -85,8 +85,9 @@ normalize_install_names() {
       esac
     done < <(otool -L "$bin" 2>/dev/null | awk 'NR>1 {print $1}')
   done
+  # 仅诊断输出，任何失败都不影响结果（静态库下 otool -D 可能失败）
   echo "     install name 示例:"
-  otool -D "$OUT/libavcodec.framework/libavcodec" 2>/dev/null | tail -1 | sed 's/^/       /'
+  { otool -D "$OUT/libavcodec.framework/libavcodec" 2>/dev/null | tail -1 | sed 's/^/       /'; } || true
 }
 
 for idx in "${!SOURCES[@]}"; do
@@ -111,7 +112,6 @@ for idx in "${!SOURCES[@]}"; do
   fi
   # 二进制类型诊断：动态库(Mach-O dylib)需 embed + @rpath，静态库(ar archive)
   # 已静态链接进主程序、embed 多余但无害。工程两种都兼容。
-  local kind
   kind="$(file -b "$OUT/libavcodec.framework/libavcodec")"
   echo "  二进制类型: ${kind}"
   normalize_install_names

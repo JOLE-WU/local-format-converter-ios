@@ -1,0 +1,83 @@
+name: Build unsigned IPA (FormatConverter)
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'dist/**'
+      - '*.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Xcode version
+        run: |
+          xcodebuild -version
+          xcode-select -p
+          swift --version
+
+      - name: Build unsigned .app (arm64, iPhoneOS)
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project FormatConverter.xcodeproj \
+            -scheme FormatConverter \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            clean build 2>&1 | tail -80
+
+      - name: Package .ipa
+        run: |
+          set -euo pipefail
+          APP="$(find build -type d -name 'FormatConverter.app' -print -quit)"
+          test -n "$APP" && echo "Found: $APP"
+          rm -rf Payload && mkdir Payload
+          cp -R "$APP" Payload/
+          rm -rf Payload/FormatConverter.app/_CodeSignature Payload/FormatConverter.app/embedded.mobileprovision
+          rm -f FormatConverter.ipa
+          zip -qry FormatConverter.ipa Payload
+          echo "=== IPA content ==="
+          unzip -l FormatConverter.ipa | head -30
+          echo "=== size ==="
+          du -h FormatConverter.ipa
+
+      - name: Verify bundle
+        run: python3 verify.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FormatConverter-unsigned-ipa
+          path: FormatConverter.ipa
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish IPA back to repo (fallback download channel)
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp FormatConverter.ipa dist/FormatConverter.ipa
+          git config user.name "fc-build-bot"
+          git config user.email "fc-build-bot@users.noreply.github.com"
+          git add -f dist/FormatConverter.ipa
+          if git diff --cached --quiet; then
+            echo "IPA unchanged, skip commit"
+          else
+            git commit -m "chore: publish unsigned IPA [skip ci]"
+            git push origin HEAD:main || echo "push failed (non-fatal; artifact still available)"
+          fi
